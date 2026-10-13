@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ecliptic longitudes of the planets · natal-chart-math</title>
+  <meta name="description" content="Geocentric tropical ecliptic longitudes of the Sun, Moon, and planets in JavaScript with astronomy-engine, plus sign and degree conversion.">
+  <link rel="canonical" href="https://kibovrwa.github.io/natal-chart-math/planet-longitudes.html">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f6f2;
+      --fg: #1d1c19;
+      --muted: #5e5a52;
+      --line: #e2ddd2;
+      --code: #efece4;
+      --link: #7a341f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141311;
+        --fg: #eeeae2;
+        --muted: #b7b0a4;
+        --line: #322e28;
+        --code: #221f1b;
+        --link: #f0b9a0;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0 auto;
+      max-width: 40rem;
+      padding: 1.5rem 1.25rem 3.5rem;
+      background: var(--bg);
+      color: var(--fg);
+      font: 1.05rem/1.6 Georgia, "Iowan Old Style", Palatino, serif;
+    }
+    a { color: var(--link); }
+    a:hover { text-decoration-thickness: 2px; }
+    .brand {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .brand a { color: var(--muted); text-decoration: none; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      margin: 0.4rem 0 1.75rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--line);
+      font-family: system-ui, sans-serif;
+      font-size: 0.95rem;
+    }
+    nav a[aria-current="page"] { color: var(--fg); text-decoration: none; font-weight: 600; }
+    h1 { font-size: 1.85rem; line-height: 1.2; font-weight: 600; margin: 0 0 0.8rem; }
+    h2 { font-size: 1.28rem; line-height: 1.3; margin: 2.1rem 0 0.6rem; font-weight: 600; }
+    h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; font-weight: 600; }
+    p { margin: 0.7rem 0; }
+    ul { margin: 0.6rem 0; padding-left: 1.25rem; }
+    li { margin: 0.3rem 0; }
+    code, pre { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+    code { font-size: 0.86em; background: var(--code); padding: 0.08em 0.28em; border-radius: 3px; }
+    pre { overflow-x: auto; padding: 0.85rem 1rem; background: var(--code); border-radius: 6px; line-height: 1.45; }
+    pre code { background: none; padding: 0; font-size: 0.8rem; }
+    table { border-collapse: collapse; width: 100%; margin: 0.8rem 0 1rem; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+    th, td { text-align: left; padding: 0.32rem 0.7rem 0.32rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: system-ui, sans-serif; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    footer { margin-top: 2.5rem; padding-top: 0.9rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.92rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="brand"><a href="./">natal-chart-math</a></p>
+    <nav aria-label="Guide">
+      <a href="./">Overview</a>
+      <a href="planet-longitudes.html" aria-current="page">Planet longitudes</a>
+      <a href="ascendant-and-houses.html">Ascendant and houses</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Ecliptic longitudes of the planets</h1>
+    <p>Ecliptic longitude is the angle along the plane of the Earth’s orbit, measured eastward from the March equinox of date, from 0° up to 360°. That zero point is 0° tropical Aries. The sign is the 30° sector the longitude falls in, and the degree is the remainder inside that sector.</p>
+    <p>The functions below are the ones in <a href="https://github.com/kibovrwa/natal-chart-math/blob/master/examples/positions.js"><code>examples/positions.js</code></a>. They take a UTC <code>Date</code>. Building that <code>Date</code> from a civil clock and an IANA zone is the <a href="./">overview</a>. For the worked birth, 12 April 1994 at 07:42 in <code>Asia/Singapore</code>, the instant is <code>1994-04-11T23:42:00.000Z</code>.</p>
+
+    <h2 id="signs">From 0° to a sign</h2>
+    <table>
+      <thead>
+        <tr><th>Longitude</th><th>Sign</th><th>Longitude</th><th>Sign</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0°</td><td>Aries</td><td>180°</td><td>Libra</td></tr>
+        <tr><td>30°</td><td>Taurus</td><td>210°</td><td>Scorpio</td></tr>
+        <tr><td>60°</td><td>Gemini</td><td>240°</td><td>Sagittarius</td></tr>
+        <tr><td>90°</td><td>Cancer</td><td>270°</td><td>Capricorn</td></tr>
+        <tr><td>120°</td><td>Leo</td><td>300°</td><td>Aquarius</td></tr>
+        <tr><td>150°</td><td>Virgo</td><td>330°</td><td>Pisces</td></tr>
+      </tbody>
+    </table>
+<pre><code>wrap(x)     = ((x mod 360) + 360) mod 360
+sign index  = floor(wrap(L) / 30)     0 = Aries … 11 = Pisces
+degree      = wrap(L) mod 30</code></pre>
+    <p>The double modulo in <code>wrap</code> matters. In JavaScript, <code>(-1) % 360</code> is <code>-1</code>, so a negative intermediate angle has to be shifted back into range before you divide by 30. The index then lines up with the table: 0 Aries, 1 Taurus, and so on through 11 Pisces.</p>
+
+    <h2 id="frame">Geocentric and tropical</h2>
+    <p>Geocentric means the origin is the center of the Earth. The same instant gives the same geocentric longitude in Singapore and in New York. The city still enters the chart, because it supplies the time zone that turns the birth clock into that instant, and because the <a href="ascendant-and-houses.html">ascendant</a> needs the city’s latitude and longitude.</p>
+    <p>Tropical means the zero of longitude is the equinox of the date you ask for, so precession is already in the number. <code>astronomy-engine</code> returns that equinox-of-date longitude. A sidereal longitude is the tropical longitude minus an ayanamsa. This page keeps the tropical value.</p>
+    <p>A chart’s sign uses the longitude and leaves the ecliptic latitude aside. Latitude is the angle north or south of the ecliptic plane. At the sample instant the Moon’s ecliptic latitude is about +1.92°, and Mars is about −1.07°. Either figure can be large enough to matter for an eclipse or an occultation. It does not move the sign.</p>
+
+    <h2 id="calls">Three library calls</h2>
+    <p>The Sun, the Moon, and the planets come back through three functions. Each result is equinox-of-date ecliptic longitude, in degrees.</p>
+<pre><code>import { Body, Ecliptic, EclipticGeoMoon, GeoVector, SunPosition } from "astronomy-engine";
+
+function wrap(deg) {
+  return ((deg % 360) + 360) % 360;
+}
+
+function longitudeOf(body, date) {
+  if (body === "sun") return wrap(SunPosition(date).elon);
+  if (body === "moon") return wrap(EclipticGeoMoon(date).lon);
+  return wrap(Ecliptic(GeoVector(body, date, true)).elon);
+}</code></pre>
+    <p><code>SunPosition(date).elon</code> is the apparent geocentric ecliptic longitude of the Sun on the true ecliptic of date. Apparent here includes aberration.</p>
+    <p><code>EclipticGeoMoon(date)</code> returns a spherical position. The longitude field is <code>lon</code>, the latitude field is <code>lat</code>, and <code>dist</code> is the geocentric distance in AU. The angles are on the true ecliptic of date: the equator is corrected for precession and nutation, and the ecliptic plane follows the slow change in obliquity. The theory behind the function is the Improved Lunar Ephemeris.</p>
+    <p>For Mercury through Pluto, <code>GeoVector(body, date, true)</code> is a vector from the center of the Earth in J2000 equatorial coordinates. Light-travel time is always removed, so the vector is where the body was when the light left it. The <code>true</code> argument applies aberration, which shifts the apparent direction by about 20″ of longitude. <code>Ecliptic</code> rotates that J2000 vector onto the true ecliptic of date. Read <code>elon</code>. The matching latitude is <code>elat</code>.</p>
+    <p>The body values are <code>Body.Mercury</code>, <code>Body.Venus</code>, <code>Body.Mars</code>, <code>Body.Jupiter</code>, <code>Body.Saturn</code>, <code>Body.Uranus</code>, <code>Body.Neptune</code>, and <code>Body.Pluto</code>. Pass the sample instant and print:</p>
+<pre><code>const when = new Date("1994-04-11T23:42:00Z");
+longitudeOf("sun", when);     // 21.8477°
+longitudeOf("moon", when);    // 32.4123°
+longitudeOf(Body.Mars, when); // 357.8495°</code></pre>
+
+    <h2 id="sample">The Singapore birth</h2>
+    <p>This is the table <code>examples/positions.js</code> prints. The degree column is the longitude rounded to 0.01°. The sign column is formatted from the full value, so the arcminutes are the minutes of that full value.</p>
+    <table>
+      <thead>
+        <tr><th>Body</th><th>Longitude</th><th>Sign</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Sun</td><td>21.85°</td><td>Aries 21°51′</td></tr>
+        <tr><td>Moon</td><td>32.41°</td><td>Taurus 2°25′</td></tr>
+        <tr><td>Mercury</td><td>3.88°</td><td>Aries 3°53′</td></tr>
+        <tr><td>Venus</td><td>42.53°</td><td>Taurus 12°32′</td></tr>
+        <tr><td>Mars</td><td>357.85°</td><td>Pisces 27°51′</td></tr>
+        <tr><td>Jupiter</td><td>222.04°</td><td>Scorpio 12°02′</td></tr>
+        <tr><td>Saturn</td><td>338.47°</td><td>Pisces 8°28′</td></tr>
+        <tr><td>Uranus</td><td>296.19°</td><td>Capricorn 26°12′</td></tr>
+        <tr><td>Neptune</td><td>293.30°</td><td>Capricorn 23°18′</td></tr>
+        <tr><td>Pluto</td><td>237.61°</td><td>Scorpio 27°36′</td></tr>
+      </tbody>
+    </table>
+    <p>Uranus shows why the two columns can look one minute apart. The unrounded longitude is 296.1917°. Rounded to 0.01° that is 296.19°, whose fractional degree would suggest 11′. The full value sits just above the point where the minutes round up, and the formatter prints Capricorn 26°12′. Pluto is the same kind of case: 237.6065° prints as 237.61° and as Scorpio 27°36′. Format the full number, then round for display.</p>
+
+    <h2 id="format">Degrees and minutes</h2>
+    <p>One degree is 60 arcminutes. Take the wrapped longitude, keep the remainder after multiples of 30, and convert that remainder to minutes by multiplying by 60. Round the minutes. If the rounded minute total reaches 60, carry a degree. If that carry produces 30°, the position is 0°00′ of the next sign.</p>
+<pre><code>const SIGNS = [
+  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+];
+
+function formatLon(lon) {
+  const n = wrap(lon);
+  let sign = Math.floor(n / 30) % 12;
+  let minutes = Math.round((n % 30) * 60);
+  let deg = Math.floor(minutes / 60);
+  minutes %= 60;
+  if (deg === 30) {
+    deg = 0;
+    sign = (sign + 1) % 12;
+  }
+  return `${SIGNS[sign]} ${deg}°${String(minutes).padStart(2, "0")}′`;
+}</code></pre>
+    <p>The sample Sun is 21.847659°. Inside Aries that is 21° plus 0.847659 × 60 = 50.86′, which rounds to 51′. <code>formatLon</code> returns <code>Aries 21°51′</code>. Carrying through total minutes, rather than rounding the degree and the minute separately, is what makes 21.9917° print as 22°00′ of the same sign.</p>
+
+    <h2 id="motion">Daily motion and retrograde</h2>
+    <p>A body is retrograde in longitude when the geocentric ecliptic longitude is decreasing. Sample the longitude one day later and fold the difference into the half-open range (−180°, +180°]. Negative means retrograde at that instant. Positive means direct.</p>
+<pre><code>function signedArc(fromDeg, toDeg) {
+  return ((toDeg - fromDeg + 540) % 360) - 180;
+}
+
+function dailyMotion(body, date) {
+  const later = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+  return signedArc(longitudeOf(body, date), longitudeOf(body, later));
+}</code></pre>
+    <p>Over the 24 hours after the sample instant:</p>
+    <table>
+      <thead>
+        <tr><th>Body</th><th>Change in longitude</th><th>Direction</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Sun</td><td>+0.98°</td><td>direct</td></tr>
+        <tr><td>Moon</td><td>+11.79°</td><td>direct</td></tr>
+        <tr><td>Mercury</td><td>+1.73°</td><td>direct</td></tr>
+        <tr><td>Venus</td><td>+1.23°</td><td>direct</td></tr>
+        <tr><td>Mars</td><td>+0.78°</td><td>direct</td></tr>
+        <tr><td>Jupiter</td><td>−0.11°</td><td>retrograde</td></tr>
+        <tr><td>Saturn</td><td>+0.10°</td><td>direct</td></tr>
+        <tr><td>Uranus</td><td>+0.02°</td><td>direct</td></tr>
+        <tr><td>Neptune</td><td>+0.01°</td><td>direct</td></tr>
+        <tr><td>Pluto</td><td>−0.02°</td><td>retrograde</td></tr>
+      </tbody>
+    </table>
+    <p>Jupiter and Pluto are retrograde that day. The other eight are direct. For an outer planet the decrease is geocentric. Over the same day Jupiter’s heliocentric ecliptic longitude increased by 0.08°, and Pluto’s by 0.007°, while the Earth was passing them. A chart-level account of this condition is <a href="https://astralhoro.com/retrograde">retrograde</a>.</p>
+    <p>The Moon’s 11.79° is near the slow end of its range. Near perigee the Moon can cover about 15° in a day. An unknown birth clock therefore leaves the lunar degree uncertain by a large fraction of a sign, which is why that placement wants a known time. <a href="https://astralhoro.com/moon">The Moon</a> is the reader-facing treatment of the same placement.</p>
+
+    <h2 id="limits">What these longitudes leave out</h2>
+    <p>The numbers above are geocentric. The Moon’s horizontal parallax reaches about 1°, so a topocentric Moon, seen from a point on the surface, can differ by a fraction of a degree up to about that amount. Aberration is already included for the Sun, through <code>SunPosition</code>, and for the planets, through <code>GeoVector(..., true)</code>. It is about 20″ of longitude. For a chart printed to the nearest minute of arc, keep the aberration correction and treat topocentric parallax as a later refinement. The Moon is the body that refinement moves.</p>
+    <p>Those ten longitudes are the positions a wheel plots around the ecliptic. The chart at <a href="https://astralhoro.com/chart">astralhoro.com/chart</a> is that wheel for a birth you type in. The ascendant is a different angle: it is a direction on the horizon, computed on the <a href="ascendant-and-houses.html">next page</a>.</p>
+  </main>
+  <footer>
+    <p>MIT. Copyright 2026 kibovrwa. Source and the runnable scripts: <a href="https://github.com/kibovrwa/natal-chart-math">github.com/kibovrwa/natal-chart-math</a>.</p>
+  </footer>
+</body>
+</html>

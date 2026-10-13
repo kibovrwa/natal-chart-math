@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compute a natal chart in JavaScript · natal-chart-math</title>
+  <meta name="description" content="Turn a birth time and a place into a tropical natal chart in JavaScript with astronomy-engine: geocentric longitudes, the ascendant, and house cusps.">
+  <link rel="canonical" href="https://kibovrwa.github.io/natal-chart-math/">
+  <!-- GSC_VERIFICATION_META_PLACEHOLDER -->
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f6f2;
+      --fg: #1d1c19;
+      --muted: #5e5a52;
+      --line: #e2ddd2;
+      --code: #efece4;
+      --link: #7a341f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141311;
+        --fg: #eeeae2;
+        --muted: #b7b0a4;
+        --line: #322e28;
+        --code: #221f1b;
+        --link: #f0b9a0;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0 auto;
+      max-width: 40rem;
+      padding: 1.5rem 1.25rem 3.5rem;
+      background: var(--bg);
+      color: var(--fg);
+      font: 1.05rem/1.6 Georgia, "Iowan Old Style", Palatino, serif;
+    }
+    a { color: var(--link); }
+    a:hover { text-decoration-thickness: 2px; }
+    .brand {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .brand a { color: var(--muted); text-decoration: none; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      margin: 0.4rem 0 1.75rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--line);
+      font-family: system-ui, sans-serif;
+      font-size: 0.95rem;
+    }
+    nav a[aria-current="page"] { color: var(--fg); text-decoration: none; font-weight: 600; }
+    h1 { font-size: 1.85rem; line-height: 1.2; font-weight: 600; margin: 0 0 0.8rem; }
+    h2 { font-size: 1.28rem; line-height: 1.3; margin: 2.1rem 0 0.6rem; font-weight: 600; }
+    p { margin: 0.7rem 0; }
+    ul, ol { margin: 0.6rem 0; padding-left: 1.25rem; }
+    li { margin: 0.3rem 0; }
+    code, pre { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+    code { font-size: 0.86em; background: var(--code); padding: 0.08em 0.28em; border-radius: 3px; }
+    pre { overflow-x: auto; padding: 0.85rem 1rem; background: var(--code); border-radius: 6px; line-height: 1.45; }
+    pre code { background: none; padding: 0; font-size: 0.8rem; }
+    table { border-collapse: collapse; width: 100%; margin: 0.8rem 0 1rem; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+    th, td { text-align: left; padding: 0.32rem 0.7rem 0.32rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: system-ui, sans-serif; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    footer { margin-top: 2.5rem; padding-top: 0.9rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.92rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="brand"><a href="./">natal-chart-math</a></p>
+    <nav aria-label="Guide">
+      <a href="./" aria-current="page">Overview</a>
+      <a href="planet-longitudes.html">Planet longitudes</a>
+      <a href="ascendant-and-houses.html">Ascendant and houses</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Compute a natal chart in JavaScript</h1>
+    <p>A natal chart here is a civil clock time and a geographic place, turned into ecliptic longitudes. The Sun, the Moon, and the planets are geocentric positions on the ecliptic of date. The ascendant is the longitude on the eastern horizon. The midheaven is the longitude on the local meridian. House cusps are a convention laid on those angles.</p>
+    <p>The longitudes and the horizon geometry are ordinary astronomy. What someone then says about character or fate is a different kind of writing. One reader-facing walkthrough is <a href="https://astralhoro.com/how-to-read-a-birth-chart">how to read a birth chart</a>.</p>
+    <p>This site is the reference math for that astronomy, written against <a href="https://www.npmjs.com/package/astronomy-engine">astronomy-engine</a> 2.1. The only dependency of the repository is that library. Node 18 or newer runs the scripts in <code>examples/</code>. The free chart at <a href="https://astralhoro.com/chart">astralhoro.com/chart</a> is built on the same approach, and <a href="https://astralhoro.com/how-it-works">how it works</a> tells that story for readers who are here for the result rather than the JavaScript.</p>
+
+    <h2 id="inputs">What you pass in</h2>
+    <p>Four inputs fix the chart.</p>
+    <ul>
+      <li>A civil date, such as <code>1994-04-12</code>.</li>
+      <li>A clock time, such as <code>07:42</code>.</li>
+      <li>The birthplace’s IANA time zone, such as <code>Asia/Singapore</code>. The zone of the machine running the script is a different place and selects a different instant.</li>
+      <li>Latitude φ, north-positive, and longitude λ, east-positive, in degrees.</li>
+    </ul>
+    <p>The worked example on every page is 12 April 1994, 07:42, Singapore. The zone is <code>Asia/Singapore</code>, the latitude is 1.3521°N, and the longitude is 103.8198°E. Singapore does not use daylight saving, and the civil offset that morning is eight hours ahead of UTC, so the instant is 1994-04-11 23:42 UTC.</p>
+
+    <h2 id="utc">Civil time to UTC</h2>
+    <p>Treat the typed year, month, day, hour, and minute as a UTC timestamp. Format that instant in the target zone, and add the difference between the typed numbers and the numbers the zone displays. Repeat until they match. A real local time settles within a few passes, because each pass removes the error in the offset. Stop after four.</p>
+<pre><code>function zonedToUtc(date, time, timeZone) {
+  const [y, mo, d] = date.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  if (![y, mo, d, hh, mm].every(Number.isFinite)) {
+    throw new Error("Expected a date YYYY-MM-DD and a time HH:MM.");
+  }
+  const wall = Date.UTC(y, mo - 1, d, hh, mm, 0);
+  let utc = wall;
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  for (let i = 0; i &lt; 4; i++) {
+    const part = Object.fromEntries(
+      fmt.formatToParts(new Date(utc)).map((p) => [p.type, p.value])
+    );
+    const shown = Date.UTC(
+      +part.year, +part.month - 1, +part.day, +part.hour % 24, +part.minute
+    );
+    if (shown === wall) return new Date(utc);
+    utc += wall - shown;
+  }
+  return new Date(utc);
+}</code></pre>
+    <p><code>hourCycle: "h23"</code> asks for hours 00–23. The parsed hour is still taken modulo 24, because some engines format midnight as 24.</p>
+    <p><code>Intl</code> applies the historical daylight-saving rule for the civil date you pass. The same clock numbers in <code>America/New_York</code> are a different UTC instant, and the April offset there differs from the January offset. When clocks fall back, one civil time happens twice. When they spring forward, one civil time happens never. Run the conversion on a clock time that exists in that zone. A skipped hour has no UTC instant whose zone clock shows the typed numbers, and four corrections are enough for a real local time.</p>
+<pre><code>const when = zonedToUtc("1994-04-12", "07:42", "Asia/Singapore");
+// 1994-04-11T23:42:00.000Z</code></pre>
+
+    <h2 id="three">Three calculations</h2>
+    <p>From that UTC <code>Date</code>, the chart is three pieces. The next two pages carry the formulas and the code.</p>
+    <ol>
+      <li><a href="planet-longitudes.html">Ecliptic longitudes</a> of the Sun, the Moon, and the eight planets. A geocentric longitude is the same from every city. The city still chooses the time zone, and the time zone chooses the instant.</li>
+      <li><a href="ascendant-and-houses.html">The ascendant and the midheaven</a>, from Greenwich sidereal time, the place’s latitude and longitude, and the obliquity of date.</li>
+      <li>A house system laid on the ascendant. Whole-sign houses and equal houses each need only that one angle. Both stay defined at a high latitude.</li>
+    </ol>
+    <p><code>examples/positions.js</code> and <code>examples/ascendant.js</code> print this for the Singapore birth:</p>
+    <table>
+      <thead>
+        <tr><th>Quantity</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>UTC</td><td>1994-04-11T23:42:00.000Z</td></tr>
+        <tr><td>Sun</td><td>21.85° · Aries 21°51′</td></tr>
+        <tr><td>Moon</td><td>32.41° · Taurus 2°25′</td></tr>
+        <tr><td>Ascendant</td><td>31.73° · Taurus 1°44′</td></tr>
+        <tr><td>Midheaven</td><td>297.22° · Capricorn 27°13′</td></tr>
+      </tbody>
+    </table>
+    <p>The rising sign is Taurus. The Sun is still in Aries, about 9.9° of longitude short of the ascendant. Jupiter and Pluto are the two bodies whose geocentric longitude decreases over the next day. The planet page lists all ten positions and that daily motion.</p>
+
+    <h2 id="run">Run the scripts</h2>
+    <p>From the repository root, after <code>npm install</code>:</p>
+<pre><code>node examples/positions.js
+node examples/ascendant.js
+node examples/houses.js</code></pre>
+    <p><code>positions.js</code> prints the ten longitudes. <code>ascendant.js</code> prints Greenwich apparent sidereal time, the right ascension of the meridian, the obliquity, the ascendant, and the midheaven. <code>houses.js</code> prints whole-sign cusps, together with Porphyry and Placidus, for Singapore and for the same instant at Tromsø.</p>
+
+    <h2 id="scope">What a clock time is worth</h2>
+    <p>Tropical longitude is measured eastward from the March equinox of date. Zero is 0° tropical Aries, and each sign is the next 30°. <code>astronomy-engine</code> already returns that longitude. A sidereal chart subtracts an ayanamsa from these degrees. This reference keeps the tropical value.</p>
+    <p>With an unknown birth time, local noon only holds the date. The Moon’s place is uncertain by roughly 13° across that civil day, and the ascendant changes sign in about two hours on average. House cusps want a known clock time. The Sun moves about a degree a day, so the solar sign usually holds still across that uncertainty.</p>
+    <p>Wrap every longitude into [0°, 360°) before you take a sign. Compare two longitudes by the shortest arc: a raw gap of 359° is a separation of 1°.</p>
+  </main>
+  <footer>
+    <p>MIT. Copyright 2026 kibovrwa. Source and the runnable scripts: <a href="https://github.com/kibovrwa/natal-chart-math">github.com/kibovrwa/natal-chart-math</a>.</p>
+  </footer>
+</body>
+</html>

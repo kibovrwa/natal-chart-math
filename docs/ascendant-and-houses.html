@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ascendant, midheaven, and houses · natal-chart-math</title>
+  <meta name="description" content="Greenwich sidereal time, the ascendant and midheaven formulas, and whole-sign and equal house cusps in JavaScript with astronomy-engine.">
+  <link rel="canonical" href="https://kibovrwa.github.io/natal-chart-math/ascendant-and-houses.html">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f6f2;
+      --fg: #1d1c19;
+      --muted: #5e5a52;
+      --line: #e2ddd2;
+      --code: #efece4;
+      --link: #7a341f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141311;
+        --fg: #eeeae2;
+        --muted: #b7b0a4;
+        --line: #322e28;
+        --code: #221f1b;
+        --link: #f0b9a0;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0 auto;
+      max-width: 40rem;
+      padding: 1.5rem 1.25rem 3.5rem;
+      background: var(--bg);
+      color: var(--fg);
+      font: 1.05rem/1.6 Georgia, "Iowan Old Style", Palatino, serif;
+    }
+    a { color: var(--link); }
+    a:hover { text-decoration-thickness: 2px; }
+    .brand {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .brand a { color: var(--muted); text-decoration: none; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      margin: 0.4rem 0 1.75rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--line);
+      font-family: system-ui, sans-serif;
+      font-size: 0.95rem;
+    }
+    nav a[aria-current="page"] { color: var(--fg); text-decoration: none; font-weight: 600; }
+    h1 { font-size: 1.85rem; line-height: 1.2; font-weight: 600; margin: 0 0 0.8rem; }
+    h2 { font-size: 1.28rem; line-height: 1.3; margin: 2.1rem 0 0.6rem; font-weight: 600; }
+    p { margin: 0.7rem 0; }
+    ul { margin: 0.6rem 0; padding-left: 1.25rem; }
+    li { margin: 0.3rem 0; }
+    code, pre { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+    code { font-size: 0.86em; background: var(--code); padding: 0.08em 0.28em; border-radius: 3px; }
+    pre { overflow-x: auto; padding: 0.85rem 1rem; background: var(--code); border-radius: 6px; line-height: 1.45; }
+    pre code { background: none; padding: 0; font-size: 0.8rem; }
+    table { border-collapse: collapse; width: 100%; margin: 0.8rem 0 1rem; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+    th, td { text-align: left; padding: 0.32rem 0.7rem 0.32rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: system-ui, sans-serif; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    footer { margin-top: 2.5rem; padding-top: 0.9rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.92rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="brand"><a href="./">natal-chart-math</a></p>
+    <nav aria-label="Guide">
+      <a href="./">Overview</a>
+      <a href="planet-longitudes.html">Planet longitudes</a>
+      <a href="ascendant-and-houses.html" aria-current="page">Ascendant and houses</a>
+    </nav>
+  </header>
+  <main>
+    <h1>The ascendant, the midheaven, and houses</h1>
+    <p>The ascendant is the ecliptic longitude on the eastern horizon. The midheaven is the ecliptic longitude on the local meridian, on the half above the horizon. Both depend on the instant and on the geographic place. Once the instant is fixed, the <a href="planet-longitudes.html">planet longitudes</a> do not.</p>
+    <p>The sign of the ascendant is the rising sign. In the worked example, 12 April 1994, 07:42, Singapore, that sign is Taurus, at 1°44′. <a href="https://astralhoro.com/rising">Rising</a> describes that angle the way a chart reader meets it. The formulas here are the ones in <a href="https://github.com/kibovrwa/natal-chart-math/blob/master/examples/ascendant.js"><code>examples/ascendant.js</code></a>.</p>
+    <p>The sample instant, after the zone conversion on the <a href="./">overview</a>, is <code>1994-04-11T23:42:00.000Z</code>. Latitude φ is 1.3521° north. Longitude λ is 103.8198° east.</p>
+
+    <h2 id="sidereal">Sidereal time</h2>
+    <p><code>SiderealTime(date)</code> returns Greenwich apparent sidereal time in hours, in the half-open range [0, 24). Apparent sidereal time includes the equation of the equinoxes, so the zero point is the true equinox of date. When the value is 0, the Greenwich meridian is aligned with that equinox.</p>
+    <p>Geographic longitude is east-positive, in degrees, so a place west of Greenwich is negative. Dividing by 15 converts degrees to hours: the Earth turns 15° of longitude in one sidereal hour.</p>
+<pre><code>LST  = GAST + λ / 15
+RAMC = wrap24(LST) × 15
+
+wrap24(h) = ((h mod 24) + 24) mod 24</code></pre>
+    <p><code>wrap24</code> folds the hours into [0, 24) before the multiplication. RAMC, the right ascension of the local meridian, is that hour angle written in degrees. It is the right ascension culminating at the place. The midheaven is the same direction, expressed as ecliptic longitude.</p>
+<pre><code>import { SiderealTime } from "astronomy-engine";
+
+function wrap(deg) {
+  return ((deg % 360) + 360) % 360;
+}
+
+function ramcDegrees(date, lonDeg) {
+  const lstHours = SiderealTime(date) + lonDeg / 15;
+  return wrap((((lstHours % 24) + 24) % 24) * 15);
+}</code></pre>
+    <p>At the sample instant, Greenwich apparent sidereal time is 13.0304 hours. Adding 103.8198 / 15 hours of east longitude and converting to degrees gives RAMC 299.28°. East of Greenwich, local sidereal time is ahead of Greenwich. The opposite sign of longitude shifts sidereal time by 2|λ| / 15 hours and moves the ascendant by a large angle. New York is about −74°. Singapore is about +104°.</p>
+
+    <h2 id="obliquity">Obliquity</h2>
+    <p>The horizon formulas need the true obliquity of date, ε. That is the tilt between the ecliptic and the equator, including nutation. In astronomy-engine it is <code>e_tilt(MakeTime(date)).tobl</code>, in degrees. <code>e_tilt</code> takes an <code>AstroTime</code>, which <code>MakeTime</code> builds from a <code>Date</code>. For the sample, ε is 23.4387°. The mean obliquity, without nutation, is the sibling field <code>mobl</code>. Use <code>tobl</code> for the ascendant and the midheaven.</p>
+
+    <h2 id="formulas">Ascendant and midheaven</h2>
+    <p>With RAMC, latitude φ, and ε converted to radians:</p>
+<pre><code>MC  = atan2( sin RAMC,  cos RAMC · cos ε )
+ASC = atan2( cos RAMC,  −(sin RAMC · cos ε + tan φ · sin ε) )</code></pre>
+    <p><code>Math.atan2(y, x)</code> reads the quadrant from the signs of both arguments and returns radians. Convert to degrees and wrap into [0°, 360°). Pass radians into <code>Math.sin</code>, <code>Math.cos</code>, and <code>Math.tan</code>. RAMC from the sidereal-time formula is still in degrees when it comes back, so convert it first. Swapping the two arguments of <code>atan2</code> sends the angle to the wrong quadrant.</p>
+    <p>Latitude is north-positive. The factor <code>tan φ</code> carries the hemisphere, and the same expression is used north and south of the equator. At φ = ±90°, <code>tan φ</code> is undefined. Keep the latitude strictly inside the poles.</p>
+<pre><code>import { e_tilt, MakeTime, SiderealTime } from "astronomy-engine";
+
+const rad = (d) => (d * Math.PI) / 180;
+const deg = (r) => (r * 180) / Math.PI;
+const wrap = (d) => ((d % 360) + 360) % 360;
+
+function ramcDegrees(date, lonDeg) {
+  const lstHours = SiderealTime(date) + lonDeg / 15;
+  return wrap((((lstHours % 24) + 24) % 24) * 15);
+}
+
+function midheaven(ramcDeg, epsDeg) {
+  const ramc = rad(ramcDeg);
+  const eps = rad(epsDeg);
+  return wrap(deg(Math.atan2(
+    Math.sin(ramc),
+    Math.cos(ramc) * Math.cos(eps)
+  )));
+}
+
+function ascendant(ramcDeg, latDeg, epsDeg) {
+  const ramc = rad(ramcDeg);
+  const lat = rad(latDeg);
+  const eps = rad(epsDeg);
+  const y = Math.cos(ramc);
+  const x = -(Math.sin(ramc) * Math.cos(eps) + Math.tan(lat) * Math.sin(eps));
+  return wrap(deg(Math.atan2(y, x)));
+}
+
+const when = new Date("1994-04-11T23:42:00Z");
+const eps = e_tilt(MakeTime(when)).tobl;
+const ramc = ramcDegrees(when, 103.8198);
+const asc = ascendant(ramc, 1.3521, eps);
+const mc = midheaven(ramc, eps);</code></pre>
+    <p>The descendant is the ascendant plus 180°, wrapped. The imum coeli is the midheaven plus 180°, wrapped. Those four angles for Singapore are:</p>
+    <table>
+      <thead>
+        <tr><th>Angle</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Obliquity ε</td><td>23.4387°</td></tr>
+        <tr><td>RAMC</td><td>299.28°</td></tr>
+        <tr><td>Ascendant</td><td>31.73° · Taurus 1°44′</td></tr>
+        <tr><td>Midheaven</td><td>297.22° · Capricorn 27°13′</td></tr>
+        <tr><td>Descendant</td><td>211.73° · Scorpio 1°44′</td></tr>
+        <tr><td>Imum coeli</td><td>117.22° · Cancer 27°13′</td></tr>
+      </tbody>
+    </table>
+    <p>This horizon is geometric. Atmospheric refraction lifts the apparent horizon by about 34′ of altitude, which nudges the ascendant by a fraction of a degree. The formula also ignores the observer’s height above the sea.</p>
+    <p>An error of about two hours can change the rising sign. That two hours is the mean across the twelve signs. Away from the equator, consecutive signs take unequal times to rise. At Singapore’s latitude of 1.4° the inequality is small. House cusps want a known clock.</p>
+
+    <h2 id="whole-sign">Whole-sign houses</h2>
+    <p>House 1 is the sign that contains the ascendant. The next sign, in order of increasing longitude, is house 2, and so on around the zodiac. Every degree of the rising sign is house 1, including the degrees of that sign that rose earlier in the hour.</p>
+<pre><code>house(L) = ((floor(wrap(L) / 30) − floor(wrap(ASC) / 30) + 12) mod 12) + 1</code></pre>
+    <p>The twelve cusps are the starts of those signs. The first cusp is <code>floor(wrap(ASC) / 30) × 30</code>, and each later cusp adds 30°.</p>
+<pre><code>function wholeSignCusps(asc) {
+  const start = Math.floor(wrap(asc) / 30) * 30;
+  return Array.from({ length: 12 }, (_, i) => wrap(start + i * 30));
+}
+
+function wholeSignHouse(lon, asc) {
+  const sign = (value) => Math.floor(wrap(value) / 30) % 12;
+  return ((sign(lon) - sign(asc) + 12) % 12) + 1;
+}</code></pre>
+    <p>The Singapore ascendant is 31.73°, so <code>floor(31.73 / 30) × 30</code> is 30°. House 1 begins at 0° Taurus. The cusps are 0° of Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, Pisces, and Aries.</p>
+    <p>The midheaven at 297.22° is Capricorn. The sign index is <code>floor(297.22 / 30) = 9</code>, the ascendant’s sign index is 1, and <code>(9 − 1 + 12) mod 12 + 1</code> is 9. The midheaven is whole-sign house 9. The 10th cusp is 0° Aquarius.</p>
+
+    <h2 id="equal">Equal houses</h2>
+    <p>Equal houses use the same 30° steps, measured from the ascendant degree itself. House 1 is the 30° of longitude that begins at the ascendant and runs in the direction of increasing longitude. Cusp <em>k</em>, counting from 0, is <code>wrap(ASC + 30° · k)</code>. The descendant falls on cusp 7, because that cusp is the ascendant plus 180°. The midheaven falls on a cusp only when its longitude happens to land there.</p>
+<pre><code>house(L) = floor(wrap(L − ASC) / 30) + 1</code></pre>
+<pre><code>function equalCusps(asc) {
+  return Array.from({ length: 12 }, (_, i) => wrap(asc + i * 30));
+}
+
+function equalHouse(lon, asc) {
+  return Math.floor(wrap(lon - asc) / 30) + 1;
+}</code></pre>
+    <p>From the printed ascendant 31.73°, every equal cusp sits at 1°44′ of its sign. The 10th equal cusp is 301.73°, Aquarius 1°44′. The midheaven at 297.22° gives <code>wrap(297.22 − 31.73) = 265.49</code>, and <code>floor(265.49 / 30) + 1</code> is 9. Under both systems in this chart, the midheaven is a house 9 angle, and the 10th cusp is a different longitude.</p>
+    <table>
+      <thead>
+        <tr><th>House</th><th>Whole sign</th><th>Equal</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>30.00° · Taurus 0°00′</td><td>31.73° · Taurus 1°44′</td></tr>
+        <tr><td>2</td><td>60.00° · Gemini 0°00′</td><td>61.73° · Gemini 1°44′</td></tr>
+        <tr><td>3</td><td>90.00° · Cancer 0°00′</td><td>91.73° · Cancer 1°44′</td></tr>
+        <tr><td>4</td><td>120.00° · Leo 0°00′</td><td>121.73° · Leo 1°44′</td></tr>
+        <tr><td>5</td><td>150.00° · Virgo 0°00′</td><td>151.73° · Virgo 1°44′</td></tr>
+        <tr><td>6</td><td>180.00° · Libra 0°00′</td><td>181.73° · Libra 1°44′</td></tr>
+        <tr><td>7</td><td>210.00° · Scorpio 0°00′</td><td>211.73° · Scorpio 1°44′</td></tr>
+        <tr><td>8</td><td>240.00° · Sagittarius 0°00′</td><td>241.73° · Sagittarius 1°44′</td></tr>
+        <tr><td>9</td><td>270.00° · Capricorn 0°00′</td><td>271.73° · Capricorn 1°44′</td></tr>
+        <tr><td>10</td><td>300.00° · Aquarius 0°00′</td><td>301.73° · Aquarius 1°44′</td></tr>
+        <tr><td>11</td><td>330.00° · Pisces 0°00′</td><td>331.73° · Pisces 1°44′</td></tr>
+        <tr><td>12</td><td>0.00° · Aries 0°00′</td><td>1.73° · Aries 1°44′</td></tr>
+      </tbody>
+    </table>
+    <p>The two systems disagree inside the opening 1°44′ of each sign: the arc from the whole-sign cusp up to the equal cusp. Taurus 0°30′ is longitude 30.5°. It belongs to the rising sign, so <code>wholeSignHouse</code> returns 1. It lies 1.23° before the ascendant, so <code>equalHouse</code> returns 12.</p>
+    <p>In this particular birth every listed body sits past 1°44′ of its own sign, and the house numbers match. That agreement is a fact about these longitudes. The Moon at Taurus 2°25′ is only 0°41′ past the equal cusp of house 1.</p>
+    <table>
+      <thead>
+        <tr><th>Body</th><th>Place</th><th>Whole sign</th><th>Equal</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Sun</td><td>Aries 21°51′</td><td>12</td><td>12</td></tr>
+        <tr><td>Moon</td><td>Taurus 2°25′</td><td>1</td><td>1</td></tr>
+        <tr><td>Mercury</td><td>Aries 3°53′</td><td>12</td><td>12</td></tr>
+        <tr><td>Venus</td><td>Taurus 12°32′</td><td>1</td><td>1</td></tr>
+        <tr><td>Mars</td><td>Pisces 27°51′</td><td>11</td><td>11</td></tr>
+        <tr><td>Jupiter</td><td>Scorpio 12°02′</td><td>7</td><td>7</td></tr>
+        <tr><td>Saturn</td><td>Pisces 8°28′</td><td>11</td><td>11</td></tr>
+        <tr><td>Uranus</td><td>Capricorn 26°12′</td><td>9</td><td>9</td></tr>
+        <tr><td>Neptune</td><td>Capricorn 23°18′</td><td>9</td><td>9</td></tr>
+        <tr><td>Pluto</td><td>Scorpio 27°36′</td><td>7</td><td>7</td></tr>
+        <tr><td>Midheaven</td><td>Capricorn 27°13′</td><td>9</td><td>9</td></tr>
+      </tbody>
+    </table>
+    <p>The Sun in Aries is house 12 in both systems: it is still short of the Taurus ascendant. <code>wholeSignCusps</code> is what <a href="https://github.com/kibovrwa/natal-chart-math/blob/master/examples/houses.js"><code>examples/houses.js</code></a> prints under “whole sign”. The equal-house function is the companion on this page. The script also prints Porphyry, which keeps the four angles and trisects each ecliptic quadrant, and Placidus, which trisects the semi-diurnal arc.</p>
+
+    <h2 id="latitude">High latitude</h2>
+    <p>Whole-sign and equal houses need a finite ascendant, and they stay defined as the geographic latitude approaches the poles, for as long as <code>tan φ</code> itself is finite. Placidus needs a rising and setting point. <code>examples/houses.js</code> leaves Placidus unset when the absolute latitude is greater than 66°, which is where part of the ecliptic stays above the horizon or stays below it.</p>
+    <p>The same UTC instant at Tromsø, 69.6492°N, 18.9553°E, has the ascendant at 236.12°, Scorpio 26°07′, and the midheaven at 216.75°, Scorpio 6°45′. The two angles share a sign, so the whole-sign house of the midheaven is 1. The midheaven is 19.38° of longitude before the ascendant, so the equal house of the midheaven is 12. In both systems the cusps stay 30° apart.</p>
+
+    <h2 id="choose">The longitude and the house number</h2>
+    <p>Compute the longitude, compute the ascendant, then call <code>wholeSignHouse</code> or <code>equalHouse</code>. The longitude is the astronomy. The house number is the system you chose. A wheel that shows the angles together with one house system is what <a href="https://astralhoro.com/chart">astralhoro.com/chart</a> draws. <a href="https://astralhoro.com/how-to-read-a-birth-chart">How to read a birth chart</a> is about reading those house numbers once the cusps exist.</p>
+  </main>
+  <footer>
+    <p>MIT. Copyright 2026 kibovrwa. Source and the runnable scripts: <a href="https://github.com/kibovrwa/natal-chart-math">github.com/kibovrwa/natal-chart-math</a>.</p>
+  </footer>
+</body>
+</html>

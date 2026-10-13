@@ -4,7 +4,7 @@ Reference math for the angles in a tropical natal chart.
 
 A chart here is a civil clock time and a geographic place, turned into ecliptic longitudes. The Sun, Moon, and planets have geocentric longitudes. The ascendant is the longitude on the eastern horizon, and the midheaven is the longitude on the meridian. House cusps are a convention laid on those angles. Sentences about character or fate are entertainment. The positions and the horizon geometry are ordinary astronomy.
 
-The free in-browser chart at [astralhoro.com/chart](https://astralhoro.com/chart) is built on this approach. The scripts in `examples/` are the same kind of calculation, small enough to read straight through.
+The free in-browser chart at [astralhoro.com/chart](https://astralhoro.com/chart) is built on this approach. The scripts in `examples/` are the same kind of calculation, small enough to read straight through. A guide to the calculation is published at <https://kibovrwa.github.io/natal-chart-math/>.
 
 ## Usage
 

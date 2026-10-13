@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kibovrwa.github.io/natal-chart-math/sitemap.xml
