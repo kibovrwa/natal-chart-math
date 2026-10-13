@@ -1,0 +1,19 @@
+{
+  "name": "natal-chart-math",
+  "version": "1.0.0",
+  "description": "Reference math for a tropical natal chart: local time to UTC, ecliptic longitude, the ascendant, whole-sign, Porphyry, and Placidus.",
+  "type": "module",
+  "license": "MIT",
+  "author": "kibovrwa",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "positions": "node examples/positions.js",
+    "ascendant": "node examples/ascendant.js",
+    "houses": "node examples/houses.js"
+  },
+  "dependencies": {
+    "astronomy-engine": "^2.1.19"
+  }
+}
