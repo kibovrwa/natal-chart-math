@@ -199,3 +199,7 @@ Two replacements stay defined at that latitude.
 MIT. Copyright 2026 kibovrwa. See [LICENSE](LICENSE).
 
 A longer walkthrough of this approach, including the browser page, is [Compute a natal chart in the browser with astronomy-engine](https://dev.to/dylan_yu_7ffff00b5355942d/compute-a-natal-chart-in-the-browser-with-astronomy-engine-4b67).
+
+## See also
+
+- [Featured on: third-party pages that mention our tools](https://kibovrwa.github.io/featured-on/)
